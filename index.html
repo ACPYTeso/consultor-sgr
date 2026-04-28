@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consultor Normativa SGR</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f7f6f3;
+      --bg-tertiary: #f0efe9;
+      --bg-info: #e6f1fb;
+      --bg-success: #eaf3de;
+      --border: rgba(0,0,0,0.12);
+      --border-md: rgba(0,0,0,0.22);
+      --text: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --text-info: #185fa5;
+      --text-success: #3b6d11;
+      --accent: #185fa5;
+      --accent-hover: #0c447c;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-secondary: #2a2a27;
+        --bg-tertiary: #242420;
+        --bg-info: #042c53;
+        --bg-success: #173404;
+        --border: rgba(255,255,255,0.1);
+        --border-md: rgba(255,255,255,0.2);
+        --text: #f0efe9;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --text-info: #85b7eb;
+        --text-success: #97c459;
+        --accent: #378add;
+        --accent-hover: #85b7eb;
+      }
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg-tertiary);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .header .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--bg-info);
+      color: var(--text-info);
+      padding: 4px 12px;
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Topic shortcuts */
+    .topics-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .topics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .topic-btn {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .topic-btn:hover {
+      border-color: var(--border-md);
+      background: var(--bg-secondary);
+      transform: translateY(-1px);
+    }
+    .topic-btn:active { transform: scale(0.98); }
+    .topic-icon { font-size: 18px; line-height: 1; }
+    .topic-label { font-size: 12px; font-weight: 600; color: var(--text); }
+    .topic-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Chat */
+    .chat-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    }
+    .chat-header {
+      padding: 14px 18px;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-secondary);
+    }
+    .chat-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg-success);
+      color: var(--text-success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .chat-header-info h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .chat-header-info p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #639922;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .messages {
+      padding: 1.25rem;
+      min-height: 320px;
+      max-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .msg { display: flex; gap: 8px; }
+    .msg.user { justify-content: flex-end; }
+
+    .msg-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .assistant .msg-avatar {
+      background: var(--bg-success);
+      color: var(--text-success);
+    }
+
+    .msg-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.65;
+      border-radius: var(--radius-lg);
+    }
+    .msg.user .msg-bubble {
+      background: var(--bg-info);
+      color: var(--text);
+      border-radius: 16px 16px 4px 16px;
+      border: 0.5px solid var(--border);
+    }
+    .msg.assistant .msg-bubble {
+      background: var(--bg-secondary);
+      color: var(--text);
+      border-radius: 16px 16px 16px 4px;
+      border: 0.5px solid var(--border);
+    }
+    .msg-bubble strong { font-weight: 600; }
+    .msg-bubble .art-ref {
+      display: inline-block;
+      font-size: 11px;
+      background: var(--bg-info);
+      color: var(--text-info);
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin: 0 2px;
+    }
+
+    .typing-bubble {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 6px 2px;
+    }
+    .typing-bubble span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      animation: bounce 1.2s infinite;
+    }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+      40% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* Input */
+    .input-area {
+      border-top: 0.5px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      background: var(--bg);
+    }
+    .input-area textarea {
+      flex: 1;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-md);
+      padding: 9px 13px;
+      font-size: 14px;
+      font-family: var(--font);
+      resize: none;
+      height: 42px;
+      max-height: 110px;
+      overflow-y: hidden;
+      background: var(--bg-secondary);
+      color: var(--text);
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    .input-area textarea::placeholder { color: var(--text-tertiary); }
+    .input-area textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .send-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 18px;
+      height: 42px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: var(--accent-hover); }
+    .send-btn:active { transform: scale(0.97); }
+    .send-btn:disabled { opacity: 0.45; cursor: default; }
+
+    /* Footer */
+    .footer {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      line-height: 1.6;
+    }
+    .footer a { color: var(--text-info); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* Error */
+    .error-bubble {
+      background: #fcebeb;
+      color: #a32d2d;
+      border: 0.5px solid #f09595;
+      border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 520px) {
+      .header h1 { font-size: 22px; }
+      .topics { grid-template-columns: repeat(2, 1fr); }
+      .msg-bubble { max-width: 90%; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <div class="container">
+
+    <div class="header">
+      <div class="badge">Resolución 21/2021 SEPYME · Normativa vigente 2025</div>
+      <h1>Consultor de Normativa SGR</h1>
+      <p>Consultá sobre el Sistema de Sociedades de Garantía Recíproca. Respuestas basadas en la normativa vigente con referencias a artículos específicos.</p>
+    </div>
+
+    <p class="topics-label">Consultas frecuentes</p>
+    <div class="topics">
+      <button class="topic-btn" onclick="sendQuestion('¿Cuáles son los requisitos para constituir una SGR y obtener la autorización para funcionar?')">
+        <span class="topic-icon">🏛️</span>
+        <span class="topic-label">Constitución</span>
+        <span class="topic-desc">Requisitos y autorización</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Cómo funciona el Fondo de Riesgo, cuáles son sus límites y cómo se clasifica?')">
+        <span class="topic-icon">💰</span>
+        <span class="topic-label">Fondo de riesgo</span>
+        <span class="topic-desc">Aportes, retiros y límites</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué beneficios impositivos tienen los socios protectores según el artículo 79 de la Ley 24.467?')">
+        <span class="topic-icon">📋</span>
+        <span class="topic-label">Beneficios fiscales</span>
+        <span class="topic-desc">Art. 79, deducciones</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué tipos de garantías puede otorgar una SGR y cómo se clasifican?')">
+        <span class="topic-icon">🔒</span>
+        <span class="topic-label">Garantías</span>
+        <span class="topic-desc">Tipos y clasificación</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué es el Grado de Utilización del Fondo de Riesgo y cómo se calcula el apalancamiento?')">
+        <span class="topic-icon">📊</span>
+        <span class="topic-label">Apalancamiento</span>
+        <span class="topic-desc">Índices y cálculos</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué sanciones prevé el régimen sancionatorio para las SGR?')">
+        <span class="topic-icon">⚖️</span>
+        <span class="topic-label">Sanciones</span>
+        <span class="topic-desc">Infracciones y multas</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Quiénes pueden ser Socios Partícipes y cuáles son sus requisitos?')">
+        <span class="topic-icon">🏢</span>
+        <span class="topic-label">Socios Partícipes</span>
+        <span class="topic-desc">MiPyMEs y condiciones</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué son los Hechos Relevantes y en qué plazos deben informarse?')">
+        <span class="topic-icon">📣</span>
+        <span class="topic-label">Hechos relevantes</span>
+        <span class="topic-desc">Plazos e información</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Cómo se regula la inversión del Fondo de Riesgo y qué instrumentos están permitidos?')">
+        <span class="topic-icon">📈</span>
+        <span class="topic-label">Inversiones</span>
+        <span class="topic-desc">Instrumentos permitidos</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué son los Fondos de Afectación Específica (FAE) y cómo se constituyen?')">
+        <span class="topic-icon">🗂️</span>
+        <span class="topic-label">FAE</span>
+        <span class="topic-desc">Fideicomisos específicos</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Cuáles son los requisitos de idoneidad, integridad y solvencia para el Gerente General y el Consejo de Administración?')">
+        <span class="topic-icon">👤</span>
+        <span class="topic-label">Gobierno corporativo</span>
+        <span class="topic-desc">Idoneidad y requisitos</span>
+      </button>
+      <button class="topic-btn" onclick="sendQuestion('¿Qué establece el régimen informativo mensual que deben presentar las SGR?')">
+        <span class="topic-icon">📄</span>
+        <span class="topic-label">Régimen informativo</span>
+        <span class="topic-desc">Obligaciones de reporte</span>
+      </button>
+    </div>
+
+    <div class="chat-card">
+      <div class="chat-header">
+        <div class="chat-avatar">S</div>
+        <div class="chat-header-info">
+          <h2>Consultor SGR</h2>
+          <p>Basado en Res. 21/2021 y modificaciones vigentes</p>
+        </div>
+        <div class="online-dot"></div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="msg assistant">
+          <div class="msg-avatar">S</div>
+          <div class="msg-bubble">
+            Hola 👋 Soy tu consultor especializado en normativa SGR. Podés preguntarme sobre la <strong>Resolución 21/2021 de la SEPYME</strong> y todas sus modificaciones vigentes hasta 2025.<br><br>
+            Puedo ayudarte con temas como: constitución de SGR, fondo de riesgo, garantías, socios partícipes y protectores, beneficios fiscales del Art. 79, inversiones autorizadas, régimen sancionatorio, gobierno corporativo, hechos relevantes, FAE, y mucho más.<br><br>
+            Usá los botones de acceso rápido arriba o escribí tu consulta libremente. 🔍
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <textarea
+          id="userInput"
+          placeholder="Escribí tu consulta sobre normativa SGR..."
+          onkeydown="handleKey(event)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="handleSend()">Consultar →</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      Las respuestas se generan con IA en base a la Res. 21/2021 y modificaciones (Res. 56/2025, 273/2025, 557/2024, 471/2024, 17/2024, entre otras).<br>
+      No constituyen asesoramiento legal. Consultá siempre con un profesional habilitado.
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SGR_SYSTEM = `Eres un consultor especializado en normativa argentina de Sociedades de Garantía Recíproca (SGR). Tu único rol es responder preguntas basándote EXCLUSIVAMENTE en la normativa vigente del Sistema de SGR.
+
+NORMATIVA BASE:
+- Ley N° 24.467 y modificaciones (Ley 27.444)
+- Decreto N° 699/2018
+- Resolución 21/2021 de la SEPYME (Normas Generales del Sistema de SGR) y sus modificaciones:
+  Res. 56/2025, Res. 273/2025, Res. 557/2024, Res. 471/2024, Res. 44/2024, Res. 17/2024, Res. 29/2024, Disposición 491/2023, Disposición 470/2023, Disposición 341/2023, Disposición 316/2023, Disposición 89/2023, Disposición 18/2022, Res. 42/2022, Res. 25/2022, Res. 139/2021, Res. 116/2021, Res. 98/2021
+
+REGLAS DE RESPUESTA:
+1. Respondé siempre en español, de forma clara y bien estructurada
+2. Citá el artículo específico entre paréntesis cuando sea relevante: (Art. 8°, Res. 21/2021)
+3. Si hay modificaciones recientes, mencioná qué resolución las incorporó
+4. Usá listas cuando haya múltiples puntos o requisitos
+5. Si la pregunta no está cubierta por la normativa SGR, indicalo claramente
+6. No inventes información. Si no estás seguro, decilo
+7. Sé preciso con números: porcentajes, plazos en días, montos en pesos y UVAs
+8. Si hay disposiciones transitorias vigentes, mencionálas
+
+CONOCIMIENTO CLAVE VERIFICADO:
+
+AUTORIDAD DE APLICACIÓN:
+- SEPYME: Secretaría de la Pequeña y Mediana Empresa, Emprendedores y Economía del Conocimiento del Ministerio de Economía
+- DRSGR: Dirección del Régimen de Sociedades de Garantía Recíproca
+
+SOCIOS:
+- Socios Protectores: personas humanas o jurídicas que aportan al capital social y fondo de riesgo. Gozan del beneficio fiscal del Art. 79 Ley 24.467 si cumplen 2 años de permanencia y Grado de Utilización del 260% promedio
+  * Transitorio hasta 30/6/2024: GU mínimo 130%
+  * Transitorio 1/7/2024 al 31/12/2024: GU mínimo 200%
+  * Límite máximo por Socio Protector: 60% del Fondo de Riesgo autorizado
+- Socios Partícipes: MiPyMEs con Certificado MiPyME vigente. Mínimo 10 socios partícipes
+
+FONDO DE RIESGO:
+- Fondo de Riesgo Autorizado inicial: $2.330.000.000
+- Fondo de Riesgo Total Computable mínimo a los 6 meses: $200.000.000
+- Clasificación: Disponible (por origen: Socios Protectores, Partícipes, SGR) y Contingente
+- Aportes requieren Grado de Utilización previo de 260% en los 3 meses anteriores (excepcional 200% hasta 31/12/2024)
+- Los aportes con renuncia al beneficio fiscal (Art. 16 inc. 5) no computan para el límite del 60%
+- Erogaciones imputables: honramiento de garantías, retiros de aportes, rendimientos, honorarios de custodia, gastos judiciales de recupero (Art. 16 apartado B)
+
+APALANCAMIENTO E ÍNDICES:
+- Apalancamiento Neto máximo: 4 (Saldo Neto Garantías Vigentes / Fondo de Riesgo Disponible)
+- Grado de Utilización (GU): fórmula = Saldo promedio ponderado garantías vigentes / Fondo de Riesgo Total Computable
+- Liquidez mínima: 10% de vencimientos del mes siguiente
+
+MIPYMES ASISTIDAS:
+- Obligación mínima desde 2024: 300 MiPyMEs por año calendario
+- Mínimo 15 deben ser MiPyMEs Lideradas por Mujeres
+- Monto mínimo computable del aval: equivalente a 539 UVAs
+- MiPyME Liderada por Mujeres: 51% titularidad femenina o 25%+ con cargo jerárquico con voto
+
+GARANTÍAS (Art. 30):
+- Financieras: Entidades Financieras Ley 21.526, Fintech, Organismos Internacionales, Públicas, CPD, FCE, Fideicomisos Financieros, ON, Valores Corto Plazo, Futuros y Opciones, Leasing, Pagaré Bursátil
+- Comerciales: Tipo I (acreedores no SP) y Tipo II (acreedores SP)
+- Técnicas: cumplimiento de obligaciones de hacer, licitaciones
+- ON PYME: régimen CNV Garantizada
+
+LÍMITES OPERATIVOS (Art. 34 Ley):
+- Máximo 5% del Fondo de Riesgo Disponible por Socio Partícipe/Tercero
+- Máximo 25% del Fondo de Riesgo Disponible por acreedor
+- Excepciones para entidades bancarias públicas (automáticas) y algunas entidades financieras (con autorización)
+
+INVERSIONES DEL FONDO DE RIESGO (Art. 22):
+- Títulos Públicos Nacionales/BCRA: hasta 90%
+- Valores provinciales/municipales: hasta 45%
+- ON y títulos de deuda: hasta 37,5%
+- Depósitos en pesos (cuentas corrientes/especiales): hasta 15%
+- Acciones autorizadas CNV: hasta 15%
+- FCI autorizados CNV: hasta 37,5%
+- CEDEARS: hasta 15% (conjunto con acciones)
+- Plazos fijos BCRA en pesos: hasta 100%, máx. 30% por entidad
+- Cuenta comitente agentes de bolsa: hasta 15 días hábiles en pesos, 3 días en moneda extranjera
+- Cauciones bursátiles: hasta 7,5%
+- Plazos fijos en Títulos Públicos: conjunto con inc. a) hasta 90%
+- ON de entidades financieras SP: hasta 7,5%
+- FCI PyME, CPD avalados, pagarés bursátiles, FCE MiPyME, ON PyME: hasta 22,5%
+- FCE MiPyME: hasta 7,5%
+- A partir del 1/4/2025 no se pueden realizar nuevas inversiones en cauciones (inc. l) ni contratos de futuros/opciones (inc. h)
+- Límite al 28/2/2026 para adecuar inversiones en cuentas corrientes (inc. d)
+- Prohibiciones: mismo emisor privado >15%, instrumentos propios avalados, CP diferido (salvo excepciones), instrumentos de Socio Protector/Partícipe (salvo inc. n)
+
+CUSTODIOS:
+- Deben ser entidades financieras inscriptas como ACPIC (Agentes de Custodia de Productos de Inversión Colectiva) ante CNV bajo categoría "Sociedad Depositaria"
+- Obligaciones: custodia activos FR, supervisar inversiones, reportar mensualmente a DRSGR
+- SGR y custodios celebran contrato ad referéndum de DRSGR
+
+GOBIERNO CORPORATIVO (Cap. X, incorporado por Res. 471/2024):
+- Manual de Gobierno Corporativo obligatorio para SGR con FR Computable > $2.330.000.000
+- Consejo de Administración: mínimo 3 personas (al menos 1 por socios partícipes, 1 por protectores)
+- Sindicatura: 3 síndicos
+- Idoneidad (desde 1/4/2025): 5 años en SGR, Agentes CNV o Entidades BCRA; o bien 3 de las 3 condiciones alternativas
+- Integridad: sin condenas por delitos dolosos, sin sanciones UIF
+- Solvencia: sin antecedentes comerciales negativos graves
+
+HECHOS RELEVANTES (Art. 55):
+- 24 hs: interrupción de negociación, cancelación de listado, baja de nómina habilitada CNV
+- 48 hs: demoras o falta de pago de avales, exceso en índice de apalancamiento
+- Con régimen informativo mensual: refinanciaciones, incumplimientos límite operativo, exceso en inversiones, mora ≥7%, cambios en sede, renuncia/remoción de directivos, cambios accionarios >30%, causas judiciales, calificación de riesgo, cambio de custodio (con 30 días de anticipación)
+
+RÉGIMEN SANCIONATORIO (Anexo 3):
+- Infracciones muy graves: operar sin autorización, fusiones no autorizadas, resistencia a contralor, no honrar garantías, no mantener calificación Preferida A
+  * Sanciones: multa $5.000 a $20.000.000, revocación de autorización
+- Infracciones graves: deficiencias en controles, incumplimiento informativo grave, no auditar cuentas, otorgar garantías sin Certificado MiPyME, inobservar apalancamiento, etc.
+  * Sanciones: multa $5.000 a $5.000.000, inhabilitación transitoria, imposibilidad de aumentos de FR
+- Infracciones leves: demás incumplimientos
+  * Sanciones: multa $5.000 a $1.000.000, apercibimiento
+
+ACTUALIZACIONES DE FONDO DE RIESGO:
+- Actualización semiautomática trimestral: requiere 95% del FR integrado, GU 260% en trimestre o dos últimos trimestres, apalancamiento bruto mínimo 2.7, y 1 MiPyME vigente por cada 18.200 UVAs de FR
+- Aumentos formales (Art. 20-B): SUSPENDIDOS hasta el 31/12/2026 por Res. 273/2025
+- Actualización: basada en variación de UVA del trimestre
+
+REIMPOSICIONES:
+- Requieren 2 años de permanencia previos del aporte
+- GU mínimo 200% en los 3 meses anteriores
+- No pueden exceder el monto original aportado`;
+
+let history = [];
+
+async function callClaude(userMessage) {
+  history.push({ role: "user", content: userMessage });
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: SGR_SYSTEM,
+      messages: history
+    })
+  });
+
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+  const data = await res.json();
+  const reply = data.content?.map(b => b.text || "").join("") || "Sin respuesta.";
+  history.push({ role: "assistant", content: reply });
+  return reply;
+}
+
+function formatText(text) {
+  return text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/(Art(?:ículo)?\.?\s*\d+[°º]?(?:\s*(?:bis|ter|quater))?(?:\s*del\s*Anexo\s*\d+)?(?:,\s*(?:Res|Resolución)\.?\s*[\d/]+)?)/gi, '<span class="art-ref">$1</span>')
+    .replace(/\n\n/g, "</p><p>")
+    .replace(/\n- /g, "</p><ul><li>")
+    .replace(/\n• /g, "</p><ul><li>")
+    .replace(/\n(\d+)\. /g, "</p><ol><li>")
+    .replace(/\n/g, "<br>");
+}
+
+function addMsg(role, html, isError = false) {
+  const container = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+
+  if (role === "assistant") {
+    const bubbleClass = isError ? "error-bubble" : "msg-bubble";
+    div.innerHTML = `<div class="msg-avatar">S</div><div class="${bubbleClass}">${html}</div>`;
+  } else {
+    div.innerHTML = `<div class="msg-bubble">${html}</div>`;
+  }
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const container = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg assistant";
+  div.id = "typing";
+  div.innerHTML = `<div class="msg-avatar">S</div><div class="msg-bubble"><div class="typing-bubble"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById("typing");
+  if (el) el.remove();
+}
+
+async function handleSend() {
+  const input = document.getElementById("userInput");
+  const btn = document.getElementById("sendBtn");
+  const text = input.value.trim();
+  if (!text || btn.disabled) return;
+
+  input.value = "";
+  input.style.height = "42px";
+  btn.disabled = true;
+
+  addMsg("user", text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"));
+  addTyping();
+
+  try {
+    const reply = await callClaude(text);
+    removeTyping();
+    addMsg("assistant", formatText(reply));
+  } catch (e) {
+    removeTyping();
+    addMsg("assistant", "⚠️ Ocurrió un error al conectar con el servicio. Verificá tu conexión e intentá nuevamente.", true);
+    history.pop();
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+
+function sendQuestion(q) {
+  document.getElementById("userInput").value = q;
+  handleSend();
+}
+
+function handleKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+}
+
+document.getElementById("userInput").addEventListener("input", function () {
+  this.style.height = "42px";
+  this.style.height = Math.min(this.scrollHeight, 110) + "px";
+  this.style.overflowY = this.scrollHeight > 110 ? "auto" : "hidden";
+});
+</script>
+</body>
+</html>
